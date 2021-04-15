@@ -1,0 +1,29 @@
+{
+  "name": "jsunit",
+  "version": "1.0.0",
+  "description": "JSUnit for creating JavaScript unit tests",
+  "main": "dist-1.0.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gijsbos/jsunit.git"
+  },
+  "keywords": [
+    "JavaScript",
+    "ECMAScript",
+    "Unit",
+    "Test",
+    "JSUnit"
+  ],
+  "author": "G.H. Bos",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gijsbos/jsunit/issues"
+  },
+  "homepage": "https://github.com/Gijsbos/jsunit#readme"
+}
