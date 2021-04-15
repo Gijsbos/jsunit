@@ -1,0 +1,5 @@
+# Remove OSC Trash
+.DS_Store
+
+# Ignore IDE files
+*.code-workspace
