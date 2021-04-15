@@ -77,7 +77,7 @@ OK (1 test, 1 assertion)
 - assertEmpty(value: any) - Success when 'value' asserts to *undefined* or *null*  
 - assertUndefined(value: any) - Success when 'value' asserts to *undefined*  
 - assertNull(value: any) - Success when 'value' asserts to *null*   
-- assertEquals(expected: any, actual: any) - Success when 'actual' quals 'expected'  
+- assertEquals(expected: any, actual: any) - Success when 'actual' equals 'expected'  
 - expectException(exception: string|Object) - Success when exception is thrown that matches exception name or object type  
 
 ## Contribute?
