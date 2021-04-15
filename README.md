@@ -74,3 +74,6 @@ OK (1 test, 1 assertion)
 - assertNull(value: any) - Success when 'value' asserts to *null*   
 - assertEquals(expected: any, actual: any) - Success when 'actual' quals 'expected'  
 - expectException(exception: string|Object) - Success when exception is thrown that matches exception name or object type  
+
+## Contribute?
+JSUnit only provides basic assertions so further implementations and updates are always welcome.  
