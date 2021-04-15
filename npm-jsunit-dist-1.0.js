@@ -69,20 +69,30 @@ module.exports.is_object_type = function(type)
  */
 class JSUnitTestException 
 {
-    message;
-    data;
-
+    /**
+     * constructor
+     * @param {*} message 
+     * @param {*} data 
+     */
     constructor(message, data) 
     {
         this.message = message;
         this.data = data;
     }
     
+    /**
+     * getMessage
+     * @returns 
+     */
     getMessage()
     {
         return this.message;
     }
 
+    /**
+     * getData
+     * @returns 
+     */
     getData()
     {
         return this.data;
@@ -94,9 +104,15 @@ class JSUnitTestException
  */
 class JSUnitTest
 {
-    objectReferences = []; // Prevent Maximum call stack size exceeded
-    assertions = [];
-    expectExceptions = [];
+    /**
+     * constructor
+     */
+    constructor()
+    {
+        this.objectReferences = []; // Prevent Maximum call stack size exceeded
+        this.assertions = [];
+        this.expectExceptions = [];
+    }
 
     /**
      * getFunctionNames
@@ -610,25 +626,14 @@ class JSUnitTest
  */
 class JSUnitTestRunner
 {
-    static LOG_BREAK_AFTER_TESTS = 50;
-    static version = '1.0';
-    static runnerClass;
-    
-    testClasses;
-    start;
-    end;
-    delta;
-    tests;
-    success;
-    assertions;
-    log;
-    logStyles;
-
     /**
      * constructor
      */
     constructor()
     {
+        this.LOG_BREAK_AFTER_TESTS = 50;
+        this.version = '1.0';
+        this.runnerClass = null;
         this.testClasses = [];
         this.start = null;
         this.end = null;

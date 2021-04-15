@@ -3,9 +3,15 @@
  */
 class JSUnitTest
 {
-    objectReferences = []; // Prevent Maximum call stack size exceeded
-    assertions = [];
-    expectExceptions = [];
+    /**
+     * constructor
+     */
+    constructor()
+    {
+        this.objectReferences = []; // Prevent Maximum call stack size exceeded
+        this.assertions = [];
+        this.expectExceptions = [];
+    }
 
     /**
      * getFunctionNames

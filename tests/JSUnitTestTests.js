@@ -17,10 +17,6 @@ class JSUnitTestTests extends JSUnitTest
         this.assertFalse(this.isExpectingException('class','methodFailure'));
     }
 
-    ////////////////
-    // Commented Out: Exception Testing Stops Execution
-    ////
-
     testExpectExceptionTrue()
     {
         this.expectException((new JSUnitTestException).constructor.name);
@@ -32,7 +28,7 @@ class JSUnitTestTests extends JSUnitTest
     {
         try
         {
-            // Cannot test?
+            // TODO:: Fix?
             // this.expectException((new Exception).constructor.name);
 
             // throw new JSUnitTestException('Throw!');
@@ -48,7 +44,7 @@ class JSUnitTestTests extends JSUnitTest
     {
         try
         {
-            // Cannot test?
+            // TODO:: Fix?
             // this.expectException((new JSUnitTestException).constructor.name);
         }
         catch(ex)
@@ -452,35 +448,5 @@ class JSUnitTestTests extends JSUnitTest
             // Check result
             this.assertTrue(result && array_equals(actualData, expectedData));
         }
-    }
-}
-
-class ExampleTestClass extends JSUnitTest
-{
-    setUpBeforeClass()
-    {
-        // Executes before tests
-    }
-    
-    setUp()
-    {
-        // Executes before every test
-    }
-    
-    testHelloWorld()
-    {
-      let value = "Hello World!";
-      
-      this.assertEquals("Hello World!", value);
-    }
-    
-    tearDown()
-    {
-        // Executes after every test
-    }
-    
-    tearDownAfterClass()
-    {
-        // Executes after tests
     }
 }

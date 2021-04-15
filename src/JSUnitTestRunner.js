@@ -3,25 +3,14 @@
  */
 class JSUnitTestRunner
 {
-    static LOG_BREAK_AFTER_TESTS = 50;
-    static version = '1.0';
-    static runnerClass;
-    
-    testClasses;
-    start;
-    end;
-    delta;
-    tests;
-    success;
-    assertions;
-    log;
-    logStyles;
-
     /**
      * constructor
      */
     constructor()
     {
+        this.LOG_BREAK_AFTER_TESTS = 50;
+        this.version = '1.0';
+        this.runnerClass = null;
         this.testClasses = [];
         this.start = null;
         this.end = null;
@@ -226,7 +215,7 @@ class JSUnitTestRunner
      * @param {Function} callable - function that receives a JSUnitTestRunner Class as argument.
      * 
      * Example Usage:
-        // Define Runner
+     // Define Runner
         JSUnitTestRunner.runner((runner) =>
         {
             // Add test class files
@@ -235,7 +224,7 @@ class JSUnitTestRunner
 
         // Run tests
         JSUnitTestRunner.run();
-     */
+    */
     static runner(callable)
     {
         // Create runner
