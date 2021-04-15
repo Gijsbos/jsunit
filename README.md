@@ -5,7 +5,7 @@ After JUnit and PHPUnit it feels only natural to introduce JSUnit.
 As the name suggests, JSUnit allows you to create JavaScript tests.
 
 ### Usage Note
-Only tested with Chrome, other browsers will complain.  
+Only tested with Chrome and FireFox, other browsers will complain.  
 
 ### Creating a JSUnitTest class
 Create a class that extends JSUnitTest and define test methods by using the *test* prefix.  
