@@ -449,4 +449,25 @@ class JSUnitTestTests extends JSUnitTest
             this.assertTrue(result && array_equals(actualData, expectedData));
         }
     }
+
+    testAssertNotEqualsTrue()
+    {
+        let array1 = ['value', new JSUnitTestException('message')];
+        let array2 = ['value', new JSUnitTestException('message1')];
+        this.assertNotEquals(array1, array2);
+    }
+
+    testAssertNotEqualsFalse()
+    {
+        try
+        {
+            let array1 = ['value', new JSUnitTestException('message')];
+            let array2 = ['value', new JSUnitTestException('message')];
+            this.assertNotEquals(array1, array2);
+        }
+        catch(ex)
+        {
+            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertNotEqualsFalse'", 'g')).test(ex.getMessage()));
+        }
+    }
 }

@@ -639,6 +639,40 @@ class JSUnitTest
                     this.throwException(info, `actual (unknown) '${actual}' does not meet expected (unknown) '${expected}'`);
         }
     }
+
+    /**
+     * assertNotEquals
+     *  Compares 'expected' with 'actual' value.
+     * @param {any} expected 
+     * @param {any} actual 
+     */
+    assertNotEquals(expected, actual)
+    {
+        let info = JSUnitTest.getFunctionCaller(this);
+
+        // Add to assertions
+        this.addAssertion(info);
+
+        // Set ex
+        var caughtException = null;
+
+        try
+        {
+            this.assertEquals(expected, actual);
+        }
+        catch(ex)
+        {
+            caughtException = ex;
+
+            if(!ex instanceof JSUnitTestException)
+                throw ex;
+        }
+
+        if(caughtException === null)
+        {
+            this.throwException(info, `failed asserting that '${actual}' is not equal to '${expected}'`);
+        }
+    }
 }
  
 /**
