@@ -133,7 +133,7 @@ class JSUnitTest
     static getFunctionNames(object)
     {
         let functionNames = [];
-        Object.getOwnPropertyNames(object.__proto__.__proto__).forEach((prop) =>
+        Object.getOwnPropertyNames(object.__proto__).forEach((prop) =>
         {
             functionNames.push(prop);
         });
@@ -147,8 +147,9 @@ class JSUnitTest
     static getFunctionCaller(object)
     {
         // Get function names
-        let functionNames = JSUnitTest.getFunctionNames(object);
+        let functionNames = JSUnitTest.getFunctionNames(object.__proto__);
         let callingObject = object.constructor.name;
+        let callingObjectFunctionNames = JSUnitTest.getFunctionNames(new object.constructor);
 
         // Throw Exception to Extract function caller name
         try
@@ -157,7 +158,16 @@ class JSUnitTest
         }
         catch (e)
         {
-            let split = e.stack.split("\n");
+            var split = e.stack.split("\n");
+
+            // For firefox we adjust the lines
+            if((new RegExp('firefox','gi')).test(navigator.userAgent) === true)
+            {
+                split = split.map((line) =>
+                {
+                    return line.replace(/(\s*)([a-z0-9]+)(\s*)(.*)/gi, `\$1at ${callingObject}.\$2 \$3(\$4)`);
+                });
+            }
 
             // Extract info
             let result = split.map((child) =>
@@ -171,15 +181,13 @@ class JSUnitTest
                 if(child === null)
                     return false;
 
-                if(child[1] === callingObject && !functionNames.includes(child[2]))
-                    return true;
-                else
-                    return false;
+                return child[1] === callingObject && !functionNames.includes(child[2]) && callingObjectFunctionNames.includes(child[2]);
             });
 
             // Return result
             let info = result.pop().slice(1);
-            
+
+            // Return info
             return {
                 class: info[0],
                 method: info[1],
@@ -830,7 +838,7 @@ class JSUnitTestRunner
      * getUserAgent
      * @returns {string}
      */
-    static getUserAgent()
+    getUserAgent()
     {
         return navigator.userAgent.replaceAll(')', ')\n').split("\n").map((p,i)=>{ return `${i==0?'\t'.repeat(0):'\t'.repeat(3)}${p.trim()}`; }).join("\n");
     }
@@ -838,9 +846,9 @@ class JSUnitTestRunner
     /**
      * showJSUnitInfo
      */
-    static showJSUnitInfo()
+    showJSUnitInfo()
     {
-        console.log(`%c\n JSUnit ${JSUnitTestRunner.version} by Gijs Bos and contributors. \n\n Runtime:\t${JSUnitTestRunner.getUserAgent()} \n`, 'line-height: 1.1rem');
+        console.log(`%c\n JSUnit ${this.version} by Gijs Bos and contributors. \n\n Runtime:\t${this.getUserAgent()} \n`, 'line-height: 1.1rem');
     }
 
     /**
@@ -875,7 +883,7 @@ class JSUnitTestRunner
             JSUnitTestRunner.runnerClass.verbose = verbose;
 
             // Show info
-            JSUnitTestRunner.showJSUnitInfo();
+            JSUnitTestRunner.runnerClass.showJSUnitInfo();
 
             try
             {

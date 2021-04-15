@@ -195,7 +195,7 @@ class JSUnitTestRunner
      * getUserAgent
      * @returns {string}
      */
-    static getUserAgent()
+    getUserAgent()
     {
         return navigator.userAgent.replaceAll(')', ')\n').split("\n").map((p,i)=>{ return `${i==0?'\t'.repeat(0):'\t'.repeat(3)}${p.trim()}`; }).join("\n");
     }
@@ -203,9 +203,9 @@ class JSUnitTestRunner
     /**
      * showJSUnitInfo
      */
-    static showJSUnitInfo()
+    showJSUnitInfo()
     {
-        console.log(`%c\n JSUnit ${JSUnitTestRunner.version} by Gijs Bos and contributors. \n\n Runtime:\t${JSUnitTestRunner.getUserAgent()} \n`, 'line-height: 1.1rem');
+        console.log(`%c\n JSUnit ${this.version} by Gijs Bos and contributors. \n\n Runtime:\t${this.getUserAgent()} \n`, 'line-height: 1.1rem');
     }
 
     /**
@@ -240,7 +240,7 @@ class JSUnitTestRunner
             JSUnitTestRunner.runnerClass.verbose = verbose;
 
             // Show info
-            JSUnitTestRunner.showJSUnitInfo();
+            JSUnitTestRunner.runnerClass.showJSUnitInfo();
 
             try
             {
