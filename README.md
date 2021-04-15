@@ -45,8 +45,7 @@ class ExampleTestClass extends JSUnitTest
 JSUnitTestRunner.runner((runner) =>
 {
     // Add test class files
-    runner.addTest(new JSUnitTestTests());
-    runner.addTest(new CoreElementTest());
+    runner.addTest(new ExampleTestClass());
 });
 
 // Run
