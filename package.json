@@ -2,7 +2,7 @@
   "name": "jsunit",
   "version": "1.0.0",
   "description": "JSUnit for creating JavaScript unit tests",
-  "main": "dist-1.0.js",
+  "main": "npm-dist-1.0.js",
   "directories": {
     "test": "tests"
   },
