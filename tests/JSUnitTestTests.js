@@ -3,80 +3,108 @@
  */
 class JSUnitTestTests extends JSUnitTest
 {
-    testIsExpectingException()
+    /**
+     * looksLike
+     *  Makes comparing easier
+     * @param {*} message 
+     * @param {*} source 
+     * @returns 
+     */
+    looksLike(message, source)
     {
-        this.expectExceptions[`class.method`] = true;
-
-        this.assertTrue(this.isExpectingException('class','method'));
+        message = message.replaceAll('(','\\(');
+        message = message.replaceAll(')','\\)');
+        message = message.replaceAll('[','\\[');
+        message = message.replaceAll(']','\\]');
+        message = message.replaceAll('.','\\.');
+        return (new RegExp(message, 'gis')).test(source);
     }
 
-    testIsExpectingException()
+    async executeAsyncFunction(value)
     {
-        this.expectExceptions[`class.method`] = true;
-
-        this.assertFalse(this.isExpectingException('class','methodFailure'));
+        return new Promise((resolve) =>
+        {
+            setTimeout(() => {   
+                resolve(value);
+            }, 200);
+        });
     }
 
-    testExpectExceptionTrue()
+    async testSetUpBeforeClass()
     {
-        this.expectException((new JSUnitTestException).constructor.name);
+        let result = await this.executeAsyncFunction('setupBeforeClass');
 
-        throw new JSUnitTestException('Throw!');
+        this.assertTrue(result == 'setupBeforeClass');
     }
 
-    testExpectExceptionExceptsDifferentExceptionFalse()
+    async testTearDownAfterClass()
+    {
+        let result = await this.executeAsyncFunction('tearDownAfterClass');
+
+        this.assertTrue(result == 'tearDownAfterClass');
+    }
+
+    testExpectException()
+    {
+        this.expectException('JSUnitTestException');
+
+        throw new JSUnitTestException('Expected');
+    }
+
+    async testExpectExceptionNotThrownFalse()
     {
         try
         {
-            // TODO:: Fix?
-            // this.expectException((new Exception).constructor.name);
-
-            // throw new JSUnitTestException('Throw!');
-        }
-        catch(ex)
-        {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testExpectExceptionExceptsDifferentExceptionFalse'", 'g')).test(ex.getMessage()));
-        }
-        this.assertTrue(true);
-    }
-
-    testExpectExceptionNotThrownFalse()
-    {
-        try
-        {
-            // TODO:: Fix?
-            // this.expectException((new JSUnitTestException).constructor.name);
+            // Cannot be done!
+            // this.expectException('Exception');
+            this.assertTrue(true);
         }
         catch(ex)
         {
             this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testExpectExceptionNotThrownFalse'", 'g')).test(ex.getMessage()));
         }
-        this.assertTrue(true);
     }
-    
-    testAssertTrueTrue()
+
+    async testExpectExceptionThrownDifferentExceptionFalse()
+    {
+        try
+        {
+            // Cannot be done!
+            // this.expectException('Exception');
+            // throw new JSUnitTestException('Different Exception');
+            this.assertTrue(true);
+        }
+        catch(ex)
+        {
+            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testExpectExceptionNotThrownFalse'", 'g')).test(ex.getMessage()));
+        }
+    }
+
+    testAssertTrueSuccess()
     {
         this.assertTrue(true);
     }
 
-    testAssertTrueFalse()
-    {
+    testAssertTrueFailure()
+    {   
         try
         {
+            this.THROW_EXCEPTION_ON_FAILURE = true;
+            this.PASS_ON_RUNNER_EXCEPTIONS = true;
             this.assertTrue(false);
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertTrueFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'JSUnitTestTests.testAssertTrueFailure'", ex.getMessage()));
         }
     }
 
-    testAssertFalseTrue()
+    testAssertFalseSuccess()
     {
         this.assertFalse(false);
     }
 
-    testAssertFalseFalse()
+    testAssertFalseFailure()
     {
         try
         {
@@ -84,7 +112,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertFalseFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'JSUnitTestTests.testAssertFalseFailure'", ex.getMessage()));
         }
     }
 
@@ -98,27 +126,15 @@ class JSUnitTestTests extends JSUnitTest
         this.assertEmpty(null);
     }
 
-    testAssertEmptyFalse()
+    testAssertEmptyTrueFailure()
     {
         try
         {
-            this.assertEmpty("false");
+            this.assertEmpty('not empty');
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEmptyFalse'", 'g')).test(ex.getMessage()));
-        }
-    }
-
-    testAssertFalseFalse()
-    {
-        try
-        {
-            this.assertFalse(true);
-        }
-        catch(ex)
-        {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertFalseFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'JSUnitTestTests.testAssertEmptyTrueFailure'", ex.getMessage()));
         }
     }
 
@@ -135,7 +151,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertUndefinedFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'JSUnitTestTests.testAssertUndefinedFalse'", ex.getMessage()));
         }
     }
 
@@ -152,7 +168,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertNullFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'JSUnitTestTests.testAssertNullFalse'", ex.getMessage()));
         }
     }
 
@@ -169,7 +185,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsTypesFailure'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'true' equals 'string", ex.getMessage()));
         }
     }
 
@@ -186,7 +202,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsTypeUndefinedFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'null' equals 'undefined'", ex.getMessage()));
         }
     }
 
@@ -203,7 +219,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsTypeNullFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'undefined' equals 'null'", ex.getMessage()));
         }
     }
 
@@ -220,7 +236,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsTypeFloatFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that actual (float) '1.2' equals expected (float) '1.1'", ex.getMessage()));
         }
     }
 
@@ -237,7 +253,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsTypeIntFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that actual (int) '2' equals expected (int) '1'", ex.getMessage()));
         }
     }
 
@@ -254,7 +270,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsTypeBooleanFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that actual (boolean) 'false' equals expected (boolean) 'true'", ex.getMessage()));
         }
     }
 
@@ -274,7 +290,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsFunctionFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that actual (function) '() => { return true; }' equals expected (function) '() => { return true; }'", ex.getMessage()));
         }
     }
 
@@ -291,7 +307,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertEqualsStringFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that actual (string) 'bye' equals expected (string) 'hi'", ex.getMessage()));
         }
     }
 
@@ -311,9 +327,9 @@ class JSUnitTestTests extends JSUnitTest
             this.assertEquals(array1, array2);
         }
         catch(ex)
-        {
+        {   
             // Get header
-            let result = (new RegExp("^Test 'JSUnitTestTests.testAssertEqualsArrayFalse'", 'g')).test(ex.getMessage());
+            let result = this.looksLike("Assertion failed", ex.getMessage());
 
             // Check data
             let actualData = ex.getData().map((item) => { return item.trim(); });
@@ -358,7 +374,7 @@ class JSUnitTestTests extends JSUnitTest
         catch(ex)
         {   
             // Get header
-            let result = (new RegExp("^Test 'JSUnitTestTests.testAssertEqualsLiteralFalse'", 'g')).test(ex.getMessage());
+            let result = this.looksLike("Assertion failed at line", ex.getMessage());
 
             // Check data
             let actualData = ex.getData().map((item) => { return item.trim(); });
@@ -395,7 +411,7 @@ class JSUnitTestTests extends JSUnitTest
         catch(ex)
         {   
             // Get header
-            let result = (new RegExp("^Test 'JSUnitTestTests.testAssertEqualsObjectFalse'", 'g')).test(ex.getMessage());
+            let result = this.looksLike("Assertion failed at line", ex.getMessage());
 
             // Check data
             let actualData = ex.getData().map((item) => { return item.trim(); });
@@ -403,8 +419,8 @@ class JSUnitTestTests extends JSUnitTest
             --- Expected.
             +++ Actual.
             JSUnitTestException (
-                - [message] => message
-                + [message] => message1
+                - [methodName] => message
+                + [methodName] => message1
             )`
             .split("\n").map((item) => { return item.trim(); });
 
@@ -424,7 +440,7 @@ class JSUnitTestTests extends JSUnitTest
         catch(ex)
         {   
             // Get header
-            let result = (new RegExp("^Test 'JSUnitTestTests.testAssertEqualsNestedObject'", 'g')).test(ex.getMessage());
+            let result = this.looksLike("Assertion failed at line", ex.getMessage());
 
             // Check data
             let actualData = ex.getData().map((item) => { return item.trim(); });
@@ -434,13 +450,14 @@ class JSUnitTestTests extends JSUnitTest
             Array (
                 - [1] => 
                         JSUnitTestException (
-                            - [message] => message
+                            - [methodName] => message
+                            - [message] => undefined
                             - [data] => undefined
                         )
                 + [1] => 
                         JSUnitTestException (
-                            - [message] => message
-                            + [message] => message1
+                            - [methodName] => message
+                            + [methodName] => message1
                         )
             )`
             .split("\n").map((item) => { return item.trim(); });
@@ -467,7 +484,7 @@ class JSUnitTestTests extends JSUnitTest
         }
         catch(ex)
         {
-            this.assertTrue((new RegExp("^Test 'JSUnitTestTests.testAssertNotEqualsFalse'", 'g')).test(ex.getMessage()));
+            this.assertTrue(this.looksLike("Failed asserting that 'value,[object Object]' is not equal to 'value,[object Object]'", ex.getMessage()));
         }
     }
 }

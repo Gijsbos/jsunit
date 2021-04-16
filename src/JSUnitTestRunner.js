@@ -9,17 +9,17 @@ class JSUnitTestRunner
     constructor()
     {
         this.LOG_BREAK_AFTER_TESTS = 50;
+        this.SHOW_TEST_START_END = false;
         this.version = '1.0';
         this.runnerClass = null;
         this.testClasses = [];
-        this.start = null;
-        this.end = null;
-        this.delta = null;
-        this.tests = [];
-        this.success = 0;
-        this.assertions = [];
         this.log = "";
         this.logStyles = [];
+        this.assertions = [];
+        this.results = [];
+        this.success = 0;
+        this.failures = 0;
+        this.skipped = 0;
     }
 
     /**
@@ -29,21 +29,278 @@ class JSUnitTestRunner
     addTest(testClass)
     {
         this.testClasses.push(testClass);
-    }    
+    }
 
     /**
      * createTestsArray
      */
-    createTestsArray()
+    async createTestsArray(testClass)
     {
-        this.testClasses.forEach((testClass) =>
+        return new Promise((resolve) =>
         {
-            Object.getOwnPropertyNames(testClass.__proto__).forEach((prop) =>
-            {
+            let tests = [];
+            Object.getOwnPropertyNames(testClass.__proto__).forEach((prop) => {
                 if((new RegExp('^test','g')).test(prop))
-                    this.tests.push(testClass[prop]);
+                    tests.push([testClass,testClass[prop]]);
             })
+            resolve(tests);
+        })
+    }
+
+    /**
+     * runSetUpBeforeClass
+     * @param {*} testClass 
+     */
+    async runSetUpBeforeClass(testClass)
+    {
+        return new Promise(async (resolve) =>
+        {
+            if(testClass.setUpBeforeClass)
+                await testClass.setUpBeforeClass();
+
+            resolve();
+        })
+    }
+
+    /**
+     * runSetUpBeforeClass
+     * @param {*} testClass 
+     */
+    async runTearDownAfterClass(testClass)
+    {
+        return new Promise(async (resolve) =>
+        {
+            if(testClass.tearDownAfterClass)
+                testClass.tearDownAfterClass();
+
+            resolve();
+        })
+    }
+
+    /**
+     * runSetUp
+     * @param {*} testClass 
+     * @returns 
+     */
+    async runSetUp(testClass)
+    {
+        return new Promise(async (resolve) =>
+        {
+            if(testClass.setUp)
+                await testClass.setUp();
+
+            resolve();
+        })
+    }
+
+    /**
+     * runTearDown
+     * @param {*} testClass 
+     * @returns 
+     */
+    async runTearDown(testClass)
+    {
+        return new Promise(async (resolve) =>
+        {
+            if(testClass.tearDown)
+                await testClass.tearDown();
+
+            resolve();
+        })
+    }
+
+    /**
+     * isAsyncMethod
+     * @param {*} method 
+     * @returns 
+     */
+    isAsyncMethod(method)
+    {
+        const AsyncFunction = (async () => {}).constructor;
+
+        return method instanceof AsyncFunction === true
+    }
+
+    /**
+     * runTests
+     */
+    async runTests(tests)
+    {
+        return new Promise(async (resolve) =>
+        {
+            let test = tests.shift();
+            
+            // Check test
+            if(test)
+            {
+                // Get methodName
+                let testClass = test[0];
+                let testMethod = test[1];
+                let methodName = testMethod.name;
+
+                // Check if method is async
+                if(this.isAsyncMethod(testMethod))
+                {
+                    //Start 
+                    if(this.SHOW_TEST_START_END) console.log(`Start\t${methodName}`);
+
+                    // SetUp
+                    await this.runSetUp(testClass);
+
+                    // Set current func
+                    testClass.currentTestName = methodName;
+
+                    // Create temp
+                    var receivedException = false;
+
+                    try
+                    {
+                        await testClass[methodName]();
+                    }
+                    catch(exception)
+                    {
+                        if(testClass.PASS_ON_RUNNER_EXCEPTIONS)
+                            throw exception;
+
+                        receivedException = testClass.handleReceivedException(methodName, exception);
+                    }
+
+                    // Check if assertion was provided
+                    if(!testClass.hasAssertion(methodName))
+                        testClass.setSkipped(methodName);
+
+                    // Check if we should have received exception
+                    if(receivedException === false)
+                        testClass.shouldHaveThrownException(methodName);
+                        
+                    // End
+                    if(this.SHOW_TEST_START_END) console.log(`End\t\t${methodName}`);
+                    
+                    // Reset
+                    testClass.currentTestName = null;
+                    
+                    // TearDown
+                    await this.runTearDown(testClass);
+                    
+                    // Repeat
+                    await this.runTests(tests);
+
+                    // Resolve
+                    resolve(true);
+                }
+                else
+                {
+                    //Start 
+                    if(this.SHOW_TEST_START_END) console.log(`Start\t${methodName}`);
+
+                    // SetUp
+                    await this.runSetUp(testClass);
+
+                    // Set current func
+                    testClass.currentTestName = methodName;
+
+                    // Create temp
+                    var receivedException = false;
+
+                    try
+                    {
+                        testClass[methodName]();
+                    }
+                    catch(exception)
+                    {
+                        if(testClass.PASS_ON_RUNNER_EXCEPTIONS)
+                            throw exception;
+
+                        receivedException = testClass.handleReceivedException(methodName, exception);
+                    }
+
+                    // Check if assertion was provided
+                    if(!testClass.hasAssertion(methodName))
+                        testClass.setSkipped(methodName);
+
+                    // Check if we should have received exception
+                    if(receivedException === false)
+                        testClass.shouldHaveThrownException(methodName);
+
+                    // End
+                    if(this.SHOW_TEST_START_END) console.log(`End\t\t${methodName}`);
+
+                    // Reset
+                    testClass.currentTestName = null;
+
+                    // TearDown
+                    await this.runTearDown(testClass);
+
+                    // Repeat
+                    await this.runTests(tests);
+
+                    // Resolve
+                    resolve(true);
+                }
+            }
+            else
+            {
+                resolve('done');
+            }
         });
+    }
+
+    /**
+     * runTestClasses
+     * @returns 
+     */
+    async runTestClasses()
+    {
+        return new Promise(async (resolve) =>
+        {
+            // Get testClass
+            let testClass = this.testClasses.shift();
+
+            // Check test
+            if(testClass)
+            {
+                // Create test
+                let tests = await this.createTestsArray(testClass);
+
+                // Check if setUpBeforeClass has been defined
+                await this.runSetUpBeforeClass(testClass);
+
+                // Execute tests
+                await this.runTests(tests);
+
+                // Check if tearDownAfterClass has been defined
+                await this.runTearDownAfterClass(testClass);
+
+                // Continue, add results
+                this.runTestClasses().then(() =>
+                {
+                    this.results = [...this.results, ...testClass.results];
+                    this.assertions = [...this.assertions, ...testClass.assertions];
+                    resolve('done');
+                });
+            }
+            else
+            {
+                resolve('done');
+            }
+        });
+    }
+
+    /**
+     * getUserAgent
+     * @returns {string}
+     */
+    getUserAgent()
+    {
+        return navigator.userAgent.replaceAll(')', ')\n').split("\n").map((p,i)=>{ return `${i==0?'\t'.repeat(0):'\t'.repeat(3)}${p.trim()}`; }).join("\n");
+    }
+
+    /**
+     * showJSUnitInfo
+     */
+    showJSUnitInfo()
+    {
+        console.log(`%c\n JSUnit ${this.version} by Gijs Bos and contributors. \n\n Runtime:\t${this.getUserAgent()} \n`, 'line-height: 1.1rem');
     }
 
     /**
@@ -72,140 +329,85 @@ class JSUnitTestRunner
     }
 
     /**
-     * runTests
+     * printResults
      */
-    runTests(verbose = false)
-    {   
-        // Set start
-        this.start = (new Date()).getTime();
-
-        // Create array
-        this.createTestsArray();
-
-        // Execute
-        this.testClasses.forEach((testClass) =>
+    printResults()
+    {
+        // Add logs
+        this.results.forEach((result) =>
         {
-            // Check if setUpBeforeClass has been defined
-            if(testClass.setUpBeforeClass)
-                testClass.setUpBeforeClass();
-
-            // Execute tests
-            Object.getOwnPropertyNames(testClass.__proto__).forEach((prop) =>
+            if(result.success)
             {
-                // Set props
-                let className = testClass.constructor.name;
-                let methodName = prop;
-
-                // Check if function is testFunction
-                if((new RegExp('^test','g')).test(methodName))
-                {
-                    // Check if setUp has been defined
-                    if(testClass.setUp)
-                        testClass.setUp();
-
-                    // Create temp var
-                    let result = null;
-                    var thrownException = false;
-
-                    // Execute test
-                    try
-                    {
-                        result = testClass[methodName]();
-                    }
-                    catch(ex)
-                    {
-                        // Check if exception was expected
-                        thrownException = testClass.isExpectingException(className, methodName);
-
-                        if(thrownException !== false)
-                        {
-                            if(ex.constructor.name !== thrownException.exception)
-                                testClass.throwException(thrownException, `failed asserting that exception of type '${thrownException.exception}' is thrown, received ${ex.constructor.name}`);
-                        }
-                        else
-                        {
-                            // Re-throw
-                            throw ex;
-                        }
-                    }
-
-                    // Check if an exception should have been thrown, but was not
-                    var shouldHaveCaughtException = testClass.isExpectingException(className, methodName);
-
-                    // Throw Failure
-                    if(thrownException === false && shouldHaveCaughtException !== false)
-                        testClass.throwException(shouldHaveCaughtException, `failed asserting that exception of type '${shouldHaveCaughtException.exception}' is thrown`);
-                    
-                    // Add success
-                        this.success += 1;
-
-                    // Check if test is in assertions
-                    if(!testClass.assertions.includes(`${testClass.constructor.name}.${methodName}`))
-                    {
-                        if(this.verbose)
-                            console.log(`%c${methodName}: No Assertion (${this.success}/${this.tests.length})`, 'background: #e5e510; color: black; font-weight: bolder');
-                        else
-                            this.addLog(`R`, 'background: #e5e510; color: black; font-weight: bolder');
-                    }
-                    else
-                    {
-                        if(this.verbose)
-                            console.log(`${methodName}: Success (${this.success}/${this.tests.length})`);
-                        else
-                            this.addLog(`.`);
-                    }
-
-                    // Check if setUp has been defined
-                    if(testClass.tearDown)
-                        testClass.tearDown();
-                }
-            });
-
-            // Check if tearDownAfterClass has been defined
-            if(testClass.tearDownAfterClass)
-                testClass.tearDownAfterClass();
-
-            // Add assertions
-            this.assertions = [...this.assertions, ...testClass.assertions];
+                this.success += 1;
+                this.addLog(".");
+            }
+            else if (result.success === null)
+            {
+                this.skipped += 1;
+                this.addLog(`R`, 'background: #e5e510; color: black; font-weight: bolder');
+            }
+            else
+            {
+                this.failures += 1;
+                this.addLog("F", 'background: #ff1616; color: white; font-weight: bolder');
+            }
         });
 
-        // Check if verbose is off
-        if(!this.verbose)
-            this.printLog();
+        // Print log
+        this.printLog();
 
-        // Check if test was success
-        if(this.success === this.tests.length)
+        // Print failure messages
+        this.results.forEach((result) =>
         {
-            // Get exec delta
-            this.end = (new Date()).getTime();
-            this.delta = (new Date()).setTime(this.end - this.start);
+            if(!result.success)
+            {   
+                // Print data
+                if(result.data && gettype(result.data) == "array")
+                    console.log(...result.data);
 
-            // Display exec time
-            console.log(`Time: ${this.delta} ms`);
+                // Report failure
+                if(result.message)
+                    console.log(`${result.message}`);
+            }
+        });
+    }
 
-            // Check if every test has assertion
-            if(this.tests.length === this.assertions.length)
-                console.log(`%c OK (${this.tests.length} ${this.tests.length === 1 ? 'test':'tests'}, ${this.assertions.length} ${this.assertions.length === 1 ? 'assertion':'assertions'}) `, 'line-height: 1.1rem; background: #0dbc79; color: black; font-weight: bolder');
-            else
-                console.log(`%c OK, but incomplete, skipped, or risky tests! \n Tests: ${this.tests.length}, Assertions: ${this.assertions.length}) `, 'line-height: 1.1rem; background: #e5e510; color: black; font-weight: bolder');
+    /**
+     * startRunner
+     */
+    async startRunner()
+    {
+        // Show info
+        this.showJSUnitInfo();
+
+        // Set start
+        let start = (new Date()).getTime();
+
+        // Run tests
+        await this.runTestClasses();
+
+        // Done
+        this.printResults();
+
+        // Get exec delta
+        let end = (new Date()).getTime();
+        let delta = (new Date()).setTime(end - start);
+
+        // Display exec time
+        console.log(`Time: ${delta} ms`);
+
+        // Check if every test has assertion
+        if(this.success === this.results.length)
+        {
+            console.log(`%c OK (${this.results.length} ${this.results.length === 1 ? 'test':'tests'}, ${this.assertions.length} ${this.assertions.length === 1 ? 'assertion':'assertions'}) `, 'line-height: 1.1rem; background: #0dbc79; color: black; font-weight: bolder');
         }
-    }
-
-    /**
-     * getUserAgent
-     * @returns {string}
-     */
-    getUserAgent()
-    {
-        return navigator.userAgent.replaceAll(')', ')\n').split("\n").map((p,i)=>{ return `${i==0?'\t'.repeat(0):'\t'.repeat(3)}${p.trim()}`; }).join("\n");
-    }
-
-    /**
-     * showJSUnitInfo
-     */
-    showJSUnitInfo()
-    {
-        console.log(`%c\n JSUnit ${this.version} by Gijs Bos and contributors. \n\n Runtime:\t${this.getUserAgent()} \n`, 'line-height: 1.1rem');
+        else
+        {
+            if(this.failures > 0)
+                console.log(`%c FAILURES! \n Tests: ${this.results.length}, Assertions: ${this.assertions.length}, Failures: ${this.failures} `, 'line-height: 1.1rem; background: #ff1616; color: white; font-weight: bolder');
+            else
+                console.log(`%c OK, but incomplete, skipped, or risky tests! \n Tests: ${this.results.length}, Assertions: ${this.assertions.length}) `, 'line-height: 1.1rem; background: #e5e510; color: black; font-weight: bolder');
+        }       
     }
 
     /**
@@ -239,27 +441,8 @@ class JSUnitTestRunner
             // Set verbose
             JSUnitTestRunner.runnerClass.verbose = verbose;
 
-            // Show info
-            JSUnitTestRunner.runnerClass.showJSUnitInfo();
-
-            try
-            {
-                JSUnitTestRunner.runnerClass.runTests();
-            }
-            catch(ex)
-            {
-                if(ex instanceof JSUnitTestException)
-                {
-                    // Print data
-                    if(ex.getData() && gettype(ex.getData()) == "array")
-                        console.log(...ex.getData());
-            
-                    // Report failure
-                    console.log(`${ex.getMessage()}`);
-                }
-                else
-                    throw ex;
-            }
+            // Run!
+            JSUnitTestRunner.runnerClass.startRunner();
         };
     }
 }
