@@ -97,12 +97,12 @@ class JSUnitTest
      * @param {*} message 
      * @param {*} data 
      */
-    setFailedResult(message, data)
+    setFailedResult(message, data, throws = false)
     {
         let lineInfo = this.getLineInfo();
         var message = lineInfo ? `${message} at line ${lineInfo}` : message;
 
-        if(this.THROW_EXCEPTION_ON_FAILURE)
+        if(throws || this.THROW_EXCEPTION_ON_FAILURE)
             throw new JSUnitTestException(this.currentTestName, message, data);
 
         if(this.hasResult(this.currentTestName))
@@ -495,9 +495,13 @@ class JSUnitTest
      * @param {any} actual 
      * @throws JSUnitException
      */
-    assertEquals(expected, actual)
+    assertEquals(expected, actual, throws = false)
     {
         this.addAssertion();
+
+        // Check if objects are literally the same
+        if(expected === actual)
+            return this.setSuccess();
 
         // Check type
         let expectedType = gettype(expected);
@@ -505,7 +509,7 @@ class JSUnitTest
 
         // Check type
         if(expectedType !== actualType)
-            return this.setFailedResult(`Failed asserting that '${actual}' equals '${expected}'`);
+            return this.setFailedResult(`Failed asserting that '${actual}' equals '${expected}'`, null, throws);
 
         // Create temp var for class objects
         let objectType = null;
@@ -515,30 +519,30 @@ class JSUnitTest
         {
             case actualType == "float":
                 if(expected != actual)
-                    return this.setFailedResult(`Failed asserting that actual (float) '${actual}' equals expected (float) '${expected}'`);
+                    return this.setFailedResult(`Failed asserting that actual (float) '${actual}' equals expected (float) '${expected}'`, null, throws);
             break;
             case actualType == "int":
                 if(expected != actual)
-                    return this.setFailedResult(`Failed asserting that actual (int) '${actual}' equals expected (int) '${expected}'`);
+                    return this.setFailedResult(`Failed asserting that actual (int) '${actual}' equals expected (int) '${expected}'`, null, throws);
             break;
             case actualType == "boolean":
                 if(expected != actual)
-                    return this.setFailedResult(`Failed asserting that actual (boolean) '${actual}' equals expected (boolean) '${expected}'`);
+                    return this.setFailedResult(`Failed asserting that actual (boolean) '${actual}' equals expected (boolean) '${expected}'`, null, throws);
             break;
             case actualType == "function":
                 if(expected != actual)
-                    return this.setFailedResult(`Failed asserting that actual (function) '${actual}' equals expected (function) '${expected}'`);
+                    return this.setFailedResult(`Failed asserting that actual (function) '${actual}' equals expected (function) '${expected}'`, null, throws);
             break;
             case actualType == "string":
                 if(expected != actual)
-                    return this.setFailedResult(`Failed asserting that actual (string) '${actual}' equals expected (string) '${expected}'`);
+                    return this.setFailedResult(`Failed asserting that actual (string) '${actual}' equals expected (string) '${expected}'`, null, throws);
             break;
             case actualType == "array":
                 let arrayReport = this.compareArray(expected, actual);
                 if(arrayReport !== true)
                 {
                     arrayReport = this.addAssertEqualsObjectDiffText(`Failed asserting that two arrays are equal.\n\r--- Expected.\n\r+++ Actual.\n`, arrayReport);
-                    return this.setFailedResult("Assertion failed", arrayReport);
+                    return this.setFailedResult("Assertion failed", arrayReport, throws);
                 }
             break;
             case actualType == "literal":
@@ -546,7 +550,7 @@ class JSUnitTest
                 if(literalReport !== true)
                 {
                     literalReport = this.addAssertEqualsObjectDiffText(`Failed asserting that two literal objects are equal.\n\r--- Expected.\n\r+++ Actual.\n`, literalReport);
-                    return this.setFailedResult("Assertion failed", literalReport);
+                    return this.setFailedResult("Assertion failed", literalReport, throws);
                 }
             break;
             case (objectType = is_object_type(actualType)) !== false:
@@ -554,12 +558,12 @@ class JSUnitTest
                 if(classReport !== true)
                 {
                     classReport = this.addAssertEqualsObjectDiffText(`Failed asserting that two objects are equal.\n\r--- Expected.\n\r+++ Actual.\n`, classReport);
-                    return this.setFailedResult("Assertion failed", classReport);
+                    return this.setFailedResult("Assertion failed", classReport, throws);
                 }
             break;
             default:
                 if(expected != actual)
-                    return this.setFailedResult(`actual (unknown) '${actual}' does not meet expected (unknown) '${expected}'`);
+                    return this.setFailedResult(`actual (unknown) '${actual}' does not meet expected (unknown) '${expected}'`, null, throws);
         }
 
         // Set success if current test name has been set, async functions might mark the test as success
@@ -582,7 +586,7 @@ class JSUnitTest
 
         try
         {
-            this.assertEquals(expected, actual);
+            this.assertEquals(expected, actual, true);
         }
         catch(ex)
         {
